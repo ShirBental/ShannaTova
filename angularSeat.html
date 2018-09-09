@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="he">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+<script src="http://code.jquery.com/ui/1.8.21/jquery-ui.min.js"></script>
+<script src="jquery.ui.touch-punch.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script><style>
+    %content {
+        font-size: 32px;
+        text-align: center;
+        margin: 0 5px;
+    }
+    .bin {
+    @extend %content;
+        width: 25%;
+        height:15%;
+        display: inline-block;
+    }
+    .item {
+    @extend %content;
+        height: 10%;
+        width: 20%;
+        display: inline-block;
+        transition: all 0.2s ease;
+    }
+    .drag {
+        opacity: 0.5;
+    }
+    .over {
+        background: red;
+    }
+    .couple{
+        width: 100%;
+        display: inline-block;
+        align-items: center;
+        text-align: center;
+        align-content: center;
+        align-self: center;
+        display: inline-block;
+
+
+
+    }
+    .table{
+        width:100%;
+        background: url("table.png") no-repeat center;
+
+    }
+    .frontTable{
+        width: 100%;
+        display: inline-block;
+        text-align: center;
+        align-content: center;
+        align-self: center;
+        display: inline-block;
+
+
+    }
+    .tailTable{
+        width: 100%;
+        text-align: center;
+        display: inline-block;
+        padding: 5%;
+
+    }
+    .member{
+        width: 100%;
+    }
+    .memberG{
+        width: 80%;
+    }
+</style>
+<body>
+<div ng-app="myApp" ng-controller="myCtrl" class="container">
+    <div ng-if="!isEveryoneHappy">
+         <div class="item" id="item{{$index}}" ng-repeat="p in people" draggable item="item" ng-if="p.pos===undefined">
+             <img class="memberG" src="{{p|personImage:p.pos }}">
+         </div>
+
+        <h3>{{mess}}</h3>
+        <br>
+
+        <div class="table">
+            <div class="{{(i%5==0) ? 'frontTable' : 'couple'}}" ng-repeat="i in [0,1,2,3,4,5]">
+                <div class="bin" droppable drop="handleDrop" bin="bin" id="bin{{i}}">
+                    <div ng-if="seats[i]"  draggable item="item" id="item{{seats[i].name}}">
+                        <img class="member" src="{{ seats[i]|seatDisplay:i }}">
+
+                    </div>
+                    <div ng-if="!seats[i]">
+                        <img  src="plat.png">
+                    </div>
+                </div>
+
+                <div ng-if='i%5!=0' class="bin" droppable drop="handleDrop" bin="bin" id="bin{{10-i}}">
+                    <div ng-if="seats[10-i]"  draggable item="item" id="item{{seats[10-i].name}}">
+                        <img class="member" src="{{ seats[10-i]|seatDisplay:10-i }}">
+                    </div>
+                    <div ng-if="!seats[10-i]">
+                        <img src="plat.png">
+                    </div>
+                </div>
+            </div>
+         </div>
+    </div>
+    <div ng-if="isEveryoneHappy">
+        <div style="text-align: center">
+            <h2> הצלחתם להרכיב שולחן מנצח</h2>
+            <h3>עכשיו, כל מה שנשאר, זה לארגן </h3>
+            <img src="https://d24o39yp3ttic8.cloudfront.net/28BE0A36-738C-437A-B2AF-27973EB4A2DB/unzipped/photo1/layers/6_anim.gif" style="width: 100%">
+
+
+        </div>
+
+    </div>
+    </div>
+    <script>
+    var app = angular.module('myApp', []);
+
+
+    app.directive('draggable', function() {
+      return function(scope, element) {
+        var el = element[0];
+        element.draggable({ revert: "valid" });
+
+      }
+    });
+
+    app.directive('droppable', function() {
+      return {
+        scope: {
+          drop: '&',
+          bin: '='
+        },
+        link: function(scope, element) {
+          // again we need the native object
+          var el = element[0];
+
+
+          var onDrop = function(e,ui) {
+              // Stops some browsers from redirecting.
+                if(e.preventDefault) { e.preventDefault(); }
+                if(e.stopPropagation) { e.stopPropagation(); }
+
+              this.classList.remove('over');
+
+              var binId = $(this)[0].id;
+              var item = ui.draggable[0];
+              console.log(binId,item,item.id);
+              scope.$apply(function(scope) {
+                var fn = scope.drop();
+                if ('undefined' !== typeof fn) {
+                  fn(item.id, binId);
+                }
+              });
+              scope.$apply();
+
+              return false;
+            };
+           element.droppable({drop:onDrop});
+
+        }
+      }
+    });
+
+
+    app.filter('personImage', function() {
+        return function(p,pos) {
+            if (pos===undefined) {
+                return  p.imageHappy;
+            }
+            if (p.isHappyFunction(pos)) {
+                return p.imageHappy;
+            }
+            return p.imageSad;
+        };
+    });
+    app.filter('seatDisplay', function() {
+        return function(p,pos) {
+            if (p===undefined) {
+                return 'empty position: ' + pos;
+            }
+            if (p.isHappyFunction(pos)) {
+                return p.imageHappy ;
+            }
+            return p.imageSad;
+        };
+    });
+    app.controller('myCtrl', function($scope) {
+        $scope.people = [];
+        $scope.seats = [];
+        $scope.getWhoIsNextToMe = function(pos) {
+            pos*=1;
+            var ans = [];
+            var allLength = $scope.seats.length;
+            if (pos>0) {
+                ans.push($scope.seats[pos-1]);
+            }
+            else {
+                ans.push($scope.seats[allLength-1]);
+            }
+            if (pos<allLength-1) {
+                ans.push($scope.seats[pos+1]);
+            }
+            else {
+                ans.push($scope.seats[0]);
+            }
+            return ans;
+        }
+
+        $scope.happyness=[];
+        for(var i=0; i<10; i++) {
+            $scope.happyness.push(false);
+        };
+        $scope.mess='';
+
+
+        $scope.person = function(name,hebrew, imageHappy,imageSad,isHappyFunction) {
+            return {
+                name:name,
+                hebrew:hebrew,
+                imageHappy:imageHappy,
+                imageSad:imageSad,
+                isHappyFunction: (isHappyFunction) ? isHappyFunction : function(pos)
+                    {
+                        var ans = $scope.getWhoIsNextToMe(pos);
+
+                        if (ans.length<2) return false;
+
+                        if (!ans[0] || !ans[1]) return false;
+                        if (Math.abs(ans[0].name-name)>1) return false;
+                        if (Math.abs(ans[1].name-name)>1) return false;
+                        return true;
+                    },
+                pos:undefined
+            };
+        }
+        for(var i=0; i<10; i++) {
+         //   $scope.people.push($scope.person(i,'happy ' + i,'sad'));
+            $scope.seats.push(undefined);
+        }
+        mustSitNextTo=function(name){
+            return function (pos) {
+                if (pos===undefined) return false;
+                var ans = $scope.getWhoIsNextToMe(pos);
+                if(ans.length==0) return false;
+                for(var i=0; i<ans.length; i++){
+                    if(ans[i] && ans[i].name==name){
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+        mustSitIn=function(mustPos){
+            return function (pos) {
+                return pos==mustPos;
+            }
+        }
+
+
+        grandPaFunc=function(pos){
+            if( mustSitNextTo(0)(pos) && mustSitIn(0)(pos)){
+                return true;
+            }
+            $scope.mess='סבא יושב בראש השולחן וליד סבתא';
+            return false;
+        }
+
+        grandMaFunc=function(pos){
+            if( mustSitNextTo(1)(pos)){
+                return true;
+            }
+            $scope.mess='סבתא יושבת ליד סבא';
+            return false;
+        }
+        babyFunc=function(pos){
+            if((mustSitNextTo(2)(pos) || mustSitNextTo(4)(pos)) && (!mustSitNextTo(7)(pos)) &&(!mustSitNextTo(5)(pos))){
+                return true;
+            }
+            $scope.mess='התינוקת יושבת ליד אחד מהוריה, אך תריב עם אחיה ותציק לדודה';
+            return false;
+        }
+        yFunc=function(pos){
+            if((!mustSitNextTo(6)(pos)) &&(!mustSitNextTo(5)(pos)) &&(!mustSitNextTo(2)(pos))) {
+                return true;
+            }
+            $scope.mess='רוני לא כל כך מתחברת לילדים, והדוד לא מפסיק לשאול תמי תתחתן';
+            return false;
+        }
+        ytwoFunc=function(pos){
+            if(!((mustSitIn(1)(pos))|| (mustSitIn(9)(pos)) || (mustSitIn(4)(pos))|| (mustSitIn(6)(pos)))){
+                return true;
+            }
+            $scope.mess='ירון לא מוכן לשבת בפינות מחשש למזל רע';
+            return false;
+        }
+        uncleFunc=function(pos){
+            if(mustSitNextTo(5)(pos) || mustSitNextTo(6)(pos) || mustSitNextTo(4)(pos)){
+                return true;
+            }
+            $scope.mess='יאיר יושב ליד לפחות אחד מילדיו או אשתו';
+            return false;
+        }
+        unTFunc=function(pos){
+            if(mustSitNextTo(5)(pos) || mustSitNextTo(6)(pos) || mustSitNextTo(2)(pos)){
+                return true;
+            }
+            $scope.mess='עדנה יושבת ליד אחד מילדיה או ליד בן זוגה';
+            return false;
+
+        }
+        childFunc=function(pos){
+            if((!mustSitNextTo(6)(pos))&&((mustSitNextTo(2)(pos) || mustSitNextTo(3)(pos)))){
+                return true;
+            }
+            $scope.mess='אורי יושב ליד הוריו, אך חשוב כי לא יריב עם אחותו';
+            return false;
+
+        }
+        heroFunc=function(pos){
+            if(!(mustSitNextTo(0)(pos))){
+                return true;
+            }
+            $scope.mess='דוד גיבור לא יושב ליד סבתא מחשש שתפטם אותו';
+            return false;
+        }
+        yOFunc=function(pos){
+
+            if(!(mustSitNextTo(9)(pos))){
+                return true;
+            }
+            $scope.mess='רועי, אוהד הכח רמת גן, לא יושב ליד ירון, אוהד הפועל תל אביב ';
+            return false;
+
+        }
+
+
+
+
+
+
+
+
+
+        $scope.people.push($scope.person(0,'סבתא','images/GrandMa_Happy.png','images/GrandMa_angry.png',grandMaFunc));
+        $scope.people.push($scope.person(1,'סבא','images/GrandPa_Happy.png','images/GrandPa_angry.png',grandPaFunc));
+        $scope.people.push($scope.person(2,'דוד','images/un_Happy.png','images/un_angry.png',uncleFunc));
+        $scope.people.push($scope.person(3,'דוד גיבור','images/H_Happy.png','images/H_angry.png',heroFunc));
+        $scope.people.push($scope.person(4,'דודה','images/unt_Happy.png','images/unt_angry.png',unTFunc));
+        $scope.people.push($scope.person(5,'ילד','images/child_Happy.png','images/child_angry.png',childFunc));
+        $scope.people.push($scope.person(6,'תינוקת','images/baby_Happy.png','images/baby_angry.png',babyFunc));
+        $scope.people.push($scope.person(7,'צעירה','images/y_Happy.png','images/y_angry.png',yFunc));
+        $scope.people.push($scope.person(8,'צעיר','images/yo_Happy.png','images/yo_angry.png',yOFunc));
+        $scope.people.push($scope.person(9,'צעיר2','images/y2_Happy.png','images/y2_angry.png',ytwoFunc));
+
+
+
+
+
+        $scope.handleDrop = function(pId, pos) {
+        console.log("handling drop",pId,pos);
+            index = pos.substring(3);
+            p = $scope.people[pId.substring(4)];
+            if ($scope.seats[index]) {
+                tempP = $scope.seats[index];
+                tempP.pos = p.pos;
+                if (p.pos) {
+                    $scope.seats[p.pos]=$scope.seats[index];
+                }
+            }
+            else {
+                if (p.pos) {
+                    $scope.seats[p.pos]=undefined;
+                }
+            }
+            p.pos = index;
+            $scope.seats[index]=p;
+
+            for(var i=0; i<10; i++){
+                if($scope.seats[i]){
+                    $scope.happyness[i]=$scope.seats[i].isHappyFunction($scope.seats[i].pos);
+                } else {
+                    $scope.happyness[i]=false;
+                }
+
+            }
+            $scope.isEveryoneHappy=true;
+            for(var i=0; i<10; i++){
+                if(!$scope.happyness[i]) {
+                    $scope.isEveryoneHappy=false;
+                    break;
+                }
+            }
+        }
+
+    });
+
+
+    </script>
+
+<script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<script type="text/javascript" src="slick/slick.min.js"></script>
+>
+</body>
+</html>
